@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Collections.Generic;
+using AutoLotDAL.Models;
 
 namespace AutoLotDAL.ConnectedLayer
 {
@@ -106,16 +107,16 @@ namespace AutoLotDAL.ConnectedLayer
                 command.Parameters.Add(param);
                 param = new SqlParameter
                 {
-                    ParameterName = "@petName",
-                    SqlDbType = SqlDbType.Int,
+                    ParameterName = "@PetName",
+                    SqlDbType = SqlDbType.Char,
                     Size = 10,
-                    Direction = ParameterDirection.Input
+                    Direction = ParameterDirection.Output
                 };
                 command.Parameters.Add(param);
 
                 command.ExecuteNonQuery();
 
-                carPetName = (string)command.Parameters["@petName"].Value;
+                carPetName = (string)command.Parameters["@PetName"].Value;
             }
             return carPetName;
         }
@@ -154,12 +155,5 @@ namespace AutoLotDAL.ConnectedLayer
             }
             return dataTable;
         }
-    }
-    public class NewCar
-    {
-        public int CarId { get; set; }
-        public string Color { get; set; }
-        public string Make { get; set; }
-        public string PetName { get; set; }
     }
 }
