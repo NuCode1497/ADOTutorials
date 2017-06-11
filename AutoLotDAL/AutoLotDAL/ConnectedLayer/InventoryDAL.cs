@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Collections.Generic;
 using AutoLotDAL.Models;
+using static System.Console;
 
 namespace AutoLotDAL.ConnectedLayer
 {
@@ -154,6 +155,54 @@ namespace AutoLotDAL.ConnectedLayer
                 dataReader.Close();
             }
             return dataTable;
+        }
+
+        public void ProcessCreditRisk(bool throwEx, int custID)
+        {
+            string fName;
+            string lName;
+            var cmdSelect = new SqlCommand($"Select * from Customers where CustId = {custID}", _sqlConnection);
+            using (var dataReader = cmdSelect.ExecuteReader())
+            {
+                if(dataReader.HasRows)
+                {
+                    dataReader.Read();
+                    fName = (string)dataReader["FirstName"];
+                    lName = (string)dataReader["LastName"];
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            var cmdRemove = new SqlCommand($"Delete from Customers where CustId = {custID}", _sqlConnection);
+            var cmdInsert = new SqlCommand($"Insert Into CreditRisks (FirstName, LastName) Values('{fName}', '{lName}')", _sqlConnection);
+
+            SqlTransaction tx = null;
+            try
+            {
+                tx = _sqlConnection.BeginTransaction();
+
+                cmdInsert.Transaction = tx;
+                cmdRemove.Transaction = tx;
+
+                cmdInsert.ExecuteNonQuery();
+                cmdRemove.ExecuteNonQuery();
+
+                //Simulate an error
+                if(throwEx)
+                {
+                    throw new Exception("Sorry! Database error! Tx failed...");
+                }
+
+                tx.Commit();
+            }
+            catch (Exception ex)
+            {
+                WriteLine(ex.Message);
+                tx?.Rollback();
+            }
         }
     }
 }
