@@ -22,12 +22,35 @@ namespace AutoLotDAL.ConnectedLayer
 
         public void InsertAuto(int id, string color, string make, string petName)
         {
-            //Format and execute SQL statement
             string sql = "Insert Into Inventory" +
-                $"(Make, Color, PetName) Values ('{make}', '{color}', '{petName}')";
-            //Execute using our connection
+                $"(Make, Color, PetName) Values (@Make, @Color, @PetName')";
             using (SqlCommand command = new SqlCommand(sql, _sqlConnection))
             {
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@Make",
+                    Value = make,
+                    SqlDbType = SqlDbType.Char,
+                    Size = 10
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@Color",
+                    Value = color,
+                    SqlDbType = SqlDbType.Char,
+                    Size = 10
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@PetName",
+                    Value = petName,
+                    SqlDbType = SqlDbType.Char,
+                    Size = 10
+                };
+                command.Parameters.Add(parameter);
+
                 command.ExecuteNonQuery();
             }
         }
@@ -64,6 +87,37 @@ namespace AutoLotDAL.ConnectedLayer
             {
                 command.ExecuteNonQuery();
             }
+        }
+
+        public string LookUpPetName(int carID)
+        {
+            string carPetName = string.Empty;
+
+            using (SqlCommand command = new SqlCommand("GetPetName", _sqlConnection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                SqlParameter param = new SqlParameter
+                {
+                    ParameterName = "@CarId",
+                    SqlDbType = SqlDbType.Int,
+                    Value = carID,
+                    Direction = ParameterDirection.Input
+                };
+                command.Parameters.Add(param);
+                param = new SqlParameter
+                {
+                    ParameterName = "@petName",
+                    SqlDbType = SqlDbType.Int,
+                    Size = 10,
+                    Direction = ParameterDirection.Input
+                };
+                command.Parameters.Add(param);
+
+                command.ExecuteNonQuery();
+
+                carPetName = (string)command.Parameters["@petName"].Value;
+            }
+            return carPetName;
         }
 
         public List<NewCar> GetAllInventoryAsList()
